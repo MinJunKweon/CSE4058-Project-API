@@ -43,6 +43,16 @@ router.get('/sign-out', auth, function (req, res, next) {
   });
 });
 
+/* change password */
+router.post('/change-password', auth, function (req, res, next) {
+  user.updatePassword(req.session.user['user_id'], req.body['password'], function (err) {
+    if (err) {
+      return res.status(err['status']).send(err);
+    }
+    return res.json({ 'code' : 200, 'message' : 'succeed to change password' });
+  });
+});
+
 /* FOR DEBUG : session checking */
 router.get('/', auth, function (req, res, next) {
   return res.send(req.session);

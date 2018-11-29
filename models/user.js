@@ -78,3 +78,33 @@ exports.create = function (body, next) {
         });
     });
 }
+
+exports.updatePassword = function (userId, password, next) {
+    if (!userId) {
+        return next({ 'code' : 201, 'message' : 'no user id' });
+    }
+
+    if (!password) {
+        return next({ 'code' : 201, 'message' : 'no password' });
+    } else {
+        var sha256 = crypto.createHash('sha256');
+        sha256.update(password);
+        password = sha256.digest('hex');
+    }
+
+    db.connection(function (err, connection) {
+        if (err) {
+            err['status'] = 500;
+            return next(err, null);
+        }
+        connection.query('UPDATE `USER` SET `password` = ? WHERE `user_id` = ?',
+            [password, userId],
+        function (err, results, fields) {
+            if (err) {
+                err['status'] = 500;
+                return next(err);
+            }
+            return next(null);
+        });
+    });
+};
