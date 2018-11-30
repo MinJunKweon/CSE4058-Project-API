@@ -8,10 +8,10 @@ var auth = require('../auth');
 router.post('/sign-in', function(req, res, next) {
   user.signIn(req.body, function (err, user) {
     if (err) {
-      return res.status(err['status']).send(err);
+      return res.status(err['code']).send(err);
     }
     req.session.user = user;
-    return res.json(user);
+    return res.json({ 'code' : 200, 'message' : 'succeed to sign in', 'data' : user });
   });
 });
 
@@ -21,14 +21,14 @@ router.post('/sign-up', function(req, res, next) {
 
   user.create(req.body, function (err, userId) {
     if (err) {
-      return res.status(err['status']).send(err);
+      return res.status(err['code']).send(err);
     }
     user.findOne(userId, function (err, user) {
       if (err) {
-        return res.status(err['status']).send(err);
+        return res.status(err['code']).send(err);
       }
       req.session.user = user;
-      return res.json(user);
+      return res.json({ 'code' : 200, 'message' : 'succeed to sign up', 'data' : user });
     });
   });
 });
@@ -47,7 +47,7 @@ router.get('/sign-out', auth, function (req, res, next) {
 router.post('/change-password', auth, function (req, res, next) {
   user.updatePassword(req.session.user['user_id'], req.body['password'], function (err) {
     if (err) {
-      return res.status(err['status']).send(err);
+      return res.status(err['code']).send(err);
     }
     return res.json({ 'code' : 200, 'message' : 'succeed to change password' });
   });
