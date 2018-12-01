@@ -13,7 +13,11 @@ exports.allNotification = function (userId, next) {
                 err['code'] = 500;
                 return next(err, null);
             }
-            return next(null, results);
+            connection.query('UPDATE `NOTIFICATION` SET `unread` = 0 WHERE `user_id` = ?',
+                [userId],
+                function (err) {
+                    return next(null, results);
+                });
         });
     });
 }
