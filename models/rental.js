@@ -1,6 +1,6 @@
 var db = require('../controllers/db');
 
-var notification = require('../models/notification');
+var notification = require('./notification');
 
 exports.findOne = function (rentalStateId, next) {
     db.connection(function (err, connection) {
@@ -118,6 +118,7 @@ exports.currentRentals = function(userId, next) {
                             'longitude' : result['longitude'],
                             'is_available' : result['is_available']
                         },
+                        'coupon_seq' : result['coupon_seq'],
                         'rental_state_id' : result['rental_state_id'],
                         'state' : result['state'],
                         'start_date' : result['start_date'],
