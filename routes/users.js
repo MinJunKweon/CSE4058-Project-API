@@ -37,7 +37,7 @@ router.post('/sign-up', function(req, res, next) {
 router.get('/sign-out', auth, function (req, res, next) {
   req.session.destroy(function (err) {
     if (err) {
-      return res.status(500).send(err);
+      return res.status(err['code']).send(err);
     }
     return res.json({ 'code' : 200, 'message' : 'succeed to sign out' });
   });
