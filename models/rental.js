@@ -1,5 +1,7 @@
 var db = require('../controllers/db');
 
+var notification = require('../models/notification');
+
 exports.findOne = function (rentalStateId, next) {
     db.connection(function (err, connection) {
         if (err) {
@@ -40,9 +42,12 @@ exports.allRentals = function (userId, next) {
     });
 }
 
-exports.postRental = function (userId, rentalShopId, itemId, couponSeq, next) {
+exports.postRental = function (userId, rentalShop, item, couponSeq, next) {
     var receivedCode = Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000;
     var returnCode = Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000;
+
+    var rentalShopId = rentalShop['rental_shop_id'];
+    var itemId = item['item_id'];
 
     db.connection(function (err, connection) {
         if (err) {
@@ -65,7 +70,13 @@ exports.postRental = function (userId, rentalShopId, itemId, couponSeq, next) {
                         err['code'] = 500;
                         return next(err);
                     }
-                    return next(null);
+                    var title = ['[', item['item_name'], '] 대여 신청되었습니다.'].join('')
+                    var description = ['[', item['item_name'], '] 물품을 [',
+                        rentalShop['rental_shop_name'], '] 대여소 (', rentalShop['rental_shop_address'], 
+                        ') 에서 수령하실 수 있습니다.'].join('');
+                    notification.postNotification(userId, title, description, function (err) {
+                        return next(null);
+                    });
                 });
             });
     });

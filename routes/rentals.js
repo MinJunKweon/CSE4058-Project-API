@@ -9,7 +9,7 @@ router.post('/create', auth, function (req, res, next) {
     var userId = req.session.user['user_id'];
     var rentalShop = req.body['rental_shop'];
     var item = req.body['item'];
-    rental.postRental(userId, rentalShop['rental_shop_id'], item['item_id'], couponSeq, function (err) {
+    rental.postRental(userId, rentalShop, item, couponSeq, function (err) {
         if (err) {
             return res.status(err['code']).send(err);
         }
