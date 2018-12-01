@@ -86,12 +86,20 @@ exports.purchaseCoupon = function(userId, couponId, next) {
             function (err, results, fields) {
                 if (err) {
                     err['code'] = 500;
-                    return next(err);
+                    return next(err, null);
                 }
                 if (!results || !results.insertId) {
-                    return next({ 'code' : 500, 'message' : 'insert coupon error' });
+                    return next({ 'code' : 500, 'message' : 'insert coupon error' }, null);
                 }
-                return next(null);
+                connection.query('SELECT * FROM `CUSTOMER_COUPON` WHERE `coupon_seq` = ?',
+                    [results.insertId],
+                    function (err, results, fields) {
+                        if (err) {
+                            err['code'] = 500;
+                            return next(err, null);
+                        }
+                        return next(null, results[0]);
+                    });
             });
     });
 }
