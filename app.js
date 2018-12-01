@@ -11,6 +11,7 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var shopsRouter = require('./routes/shops');
 var couponsRouter = require('./routes/coupons');
+var rentalsRouter = require('./routes/rentals');
 
 var app = express();
 
@@ -33,6 +34,7 @@ app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/shops', shopsRouter);
 app.use('/coupons', couponsRouter);
+app.use('/rentals', rentalsRouter);
 
 
 // catch 404 and forward to error handler
