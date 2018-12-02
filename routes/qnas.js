@@ -54,4 +54,19 @@ router.post('/answer/:question_id', auth, function (req, res, next) {
     })
 });
 
+/* get all question for manager */
+router.get('/manager', auth, function (erq, res, next) {
+    qna.allQnAForManager(function (err, questions) {
+        if (err) {
+            console.log(err);
+            return res.status(err['code']).send(err);
+        }
+        return res.json({
+            'code' : 200,
+            'message' : 'succeed to get all questions for manager',
+            'data' : questions
+        });
+    });
+});
+
 module.exports = router;

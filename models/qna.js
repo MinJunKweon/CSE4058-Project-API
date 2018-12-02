@@ -19,7 +19,7 @@ exports.allMyQnAs = function (userId, next) {
             err['code'] = 500;
             return next(err, null);
         }
-        connection.query('SELECT * FROM `QUESTION` LEFT JOIN `ANSWER` ON `QUESTION`.`question_id` = `ANSWER`.`answer_question_id` WHERE `user_id` = ?',
+        connection.query('SELECT * FROM `QUESTION` LEFT JOIN `ANSWER` ON `QUESTION`.`question_id` = `ANSWER`.`answer_question_id` WHERE `user_id` = ? ORDER BY `question_created_at` DESC',
             [userId],
             function (err, results, fields) {
                 if (err) {
@@ -35,6 +35,23 @@ exports.allMyQnAs = function (userId, next) {
             });
     });
 }
+
+exports.allQnAForManager = function (next) {
+    db.connection(function (err, connection) {
+        if (err) {
+            err['code'] = 500;
+            return next(err, null);
+        }
+        connection.query('SELECT * FROM `QUESTION` LEFT JOIN `ANSWER` ON `QUESTION`.`question_id` = `ANSWER`.`answer_question_id` WHERE `answer_id` IS NULL ORDER BY `question_created_at` DESC',
+        function (err, results, fields) {
+            if (err) {
+                err['code'] = 500;
+                return next(err, null);
+            }
+            return next(null, results);
+        });
+    });
+};
 
 exports.postQuestion = function (userId, title, content, next) {
     db.connection(function (err, connection) {
@@ -60,7 +77,7 @@ exports.postAnswer = function (managerName, questionId, title, content, next) {
             err['code'] = 500;
             return next(err);
         }
-        connection.query('INSERT INTO `ANSWER`(`manager_name`, `qnswer_question_id`, `answer_title`, `answer_content`) VALUES(?, ?, ?, ?)',
+        connection.query('INSERT INTO `ANSWER`(`manager_name`, `answer_question_id`, `answer_title`, `answer_content`) VALUES(?, ?, ?, ?)',
         [managerName, questionId, title, content],
         function (err) {
            if (err) {
