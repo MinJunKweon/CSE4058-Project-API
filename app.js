@@ -13,6 +13,7 @@ var shopsRouter = require('./routes/shops');
 var couponsRouter = require('./routes/coupons');
 var rentalsRouter = require('./routes/rentals');
 var notificationsRouter = require('./routes/notifications');
+var qnasRouter = require('./routes/qnas');
 
 var app = express();
 
@@ -37,6 +38,7 @@ app.use('/shops', shopsRouter);
 app.use('/coupons', couponsRouter);
 app.use('/rentals', rentalsRouter);
 app.use('/notifications', notificationsRouter);
+app.use('/qna', qnasRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
