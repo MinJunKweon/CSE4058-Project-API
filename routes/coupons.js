@@ -4,6 +4,17 @@ var db = require('../controllers/db');
 var coupon = require('../models/coupon');
 var auth = require('../auth');
 
+/* 모든 쿠폰 목록 가져오기 */
+router.get('/all', auth, function (req, res, next) {
+    coupon.allCoupons(function (err, coupons) {
+        if (err) {
+            console.log(err);
+            return res.status(err['code']).send(err);
+        }
+        return res.json({ 'code' : 200, 'message' : 'succeed to get all coupon list', data : coupons });
+    });
+});
+
 /* 사용자가 가진 쿠폰 목록 불러오기 */
 router.get('/', auth, function (req, res, next) {
     coupon.userCoupons(req.session.user['user_id'], function (err, coupons) {

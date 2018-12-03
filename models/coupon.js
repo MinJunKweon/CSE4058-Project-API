@@ -48,7 +48,7 @@ exports.userCoupons = function(userId, next) {
             err['code'] = 500;
             return next(err, null);
         }
-        connection.query('SELECT * FROM `CUSTOMER_COUPON` WHERE `user_id` = ?',
+        connection.query('SELECT * FROM `CUSTOMER_COUPON`, `COUPON` WHERE `user_id` = ? AND `CUSTOMER_COUPON`.`coupon_id` = `COUPON`.`coupon_id` ORDER BY `created_at` DESC',
             [userId],
             function (err, results, fields) {
                 if (err) {

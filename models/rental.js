@@ -2,6 +2,32 @@ var db = require('../controllers/db');
 
 var notification = require('./notification');
 
+var rentalStatify = function (result) {
+    return {
+        'item' : {
+            'item_id' : result['item_id'],
+            'item_name' : result['item_name']
+        },
+        'rental_shop' : {
+            'rental_shop_id' : result['rental_shop_id'],
+            'rental_shop_name' : result['rental_shop_name'],
+            'rental_shop_address' : result['rental_shop_address'],
+            'latitude' : result['latitude'],
+            'longitude' : result['longitude'],
+            'is_available' : result['is_available']
+        },
+        'coupon_seq' : result['coupon_seq'],
+        'rental_state_id' : result['rental_state_id'],
+        'state' : result['state'],
+        'start_date' : result['start_date'],
+        'end_date' : result['end_date'],
+        'received_code' : result['received_code'],
+        'return_code' : result['return_code'],
+        'is_expired' : result['is_expired'],
+        'created_at' : result['created_at']
+    };
+}
+
 exports.findOne = function (rentalStateId, next) {
     db.connection(function (err, connection) {
         if (err) {
@@ -40,6 +66,37 @@ exports.allRentals = function (userId, next) {
                 return next(null, results);
             });
     });
+}
+
+exports.history = function(userId, next) {
+    db.connection(function (err, connection) {
+        if (err) {
+            err['code'] = 500;
+            return next(err, null)
+        }
+        connection.query('SELECT * FROM `RENTAL_STATE`, `RENTAL_SHOP`, `ITEM`\
+        WHERE `user_id` = ? AND `state` = 2\
+        AND `RENTAL_SHOP`.`rental_shop_id` = `RENTAL_STATE`.`rental_shop_id`\
+        AND `ITEM`.`item_id` = `RENTAL_STATE`.`item_id`\
+        ORDER BY `rental_state_id`',
+            [userId],
+            function (err, results, fields) {
+                if (err) {
+                    err['code'] = 500;
+                    return next(err, null);
+                }
+                if (!results.length) {
+                    return next(null, []);
+                }
+                var newResults = []
+                for (idx in results) {
+                    var result = results[idx];
+                    var newResult = rentalStatify(result);
+                    newResults = newResults.concat([newResult]);
+                }
+                return next(null, newResults);
+            });
+    })
 }
 
 exports.postRental = function (userId, rentalShop, item, couponSeq, next) {
@@ -89,7 +146,7 @@ exports.currentRentals = function(userId, next) {
             return next(err, null);
         }
         connection.query('SELECT * FROM `RENTAL_STATE`, `RENTAL_SHOP`, `ITEM`\
-        WHERE `user_id` = ?\
+        WHERE `user_id` = ? AND `state` <> 2\
         AND `RENTAL_SHOP`.`rental_shop_id` = `RENTAL_STATE`.`rental_shop_id`\
         AND `ITEM`.`item_id` = `RENTAL_STATE`.`item_id`\
         ORDER BY `rental_state_id`',
@@ -105,32 +162,10 @@ exports.currentRentals = function(userId, next) {
                 var newResults = []
                 for (idx in results) {
                     var result = results[idx];
-                    var newResult = {
-                        'item' : {
-                            'item_id' : result['item_id'],
-                            'item_name' : result['item_name']
-                        },
-                        'rental_shop' : {
-                            'rental_shop_id' : result['rental_shop_id'],
-                            'rental_shop_name' : result['rental_shop_name'],
-                            'rental_shop_address' : result['rental_shop_address'],
-                            'latitude' : result['latitude'],
-                            'longitude' : result['longitude'],
-                            'is_available' : result['is_available']
-                        },
-                        'coupon_seq' : result['coupon_seq'],
-                        'rental_state_id' : result['rental_state_id'],
-                        'state' : result['state'],
-                        'start_date' : result['start_date'],
-                        'end_date' : result['end_date'],
-                        'received_code' : result['received_code'],
-                        'return_code' : result['return_code'],
-                        'is_expired' : result['is_expired'],
-                        'created_at' : result['created_at']
-                    };
+                    var newResult = rentalStatify(result);
                     newResults = newResults.concat([newResult]);
                 }
                 return next(null, newResults);
             });
     });
-}
+};

@@ -34,4 +34,18 @@ router.get('/current', auth, function (req, res, next) {
     });
 });
 
+router.get('/history', auth, function (req, res, next) {
+    var userId = req.session.user['user_id'];
+    rental.history(userId, function (err, rentals) {
+        if (err) {
+            return res.status(err['code']).send(err);
+        }
+        return res.json({
+            'code' : 200,
+            'message' : 'succeed to get all rental state history',
+            'data' : rentals
+        });
+    });
+});
+
 module.exports = router;
