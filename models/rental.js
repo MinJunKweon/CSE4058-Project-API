@@ -169,3 +169,69 @@ exports.currentRentals = function(userId, next) {
             });
     });
 };
+
+exports.receive = function (userId, rentalStateId, next) {
+    db.connection(function (err, connection) {
+        if (err) {
+            err['code'] = 500;
+            return next(err);
+        }
+        connection.query('UPDATE `RENTAL_STATE` SET `state` = 1 WHERE `rental_state_id` = ?',
+            [rentalStateId],
+            function (err, updates, fields) {
+                if (err) {
+                    err['code'] = 500;
+                    return next(err);
+                }
+                connection.query('SELECT * FROM `RENTAL_STATE`, `ITEM`, `RENTAL_SHOP` WHERE `rental_state_id` = ? AND `ITEM`.`item_id` = `RENTAL_STATE`.`item_id` AND `RENTAL_SHOP`.`rental_shop_id` = `RENTAL_STATE`.`rental_shop_id`',
+                [rentalStateId],
+                function (err, results, fields) {
+                    if (err) {
+                        err['code'] = 500;
+                        return next(err);
+                    }
+                    var result = results[0];
+                    var title = ['[', result['item_name'], '] 수령하셨습니다.'].join('')
+                    var description = ['[', result['item_name'], '] 물품을 [',
+                        result['rental_shop_name'], '] 대여소 (', result['rental_shop_address'], 
+                        ') 에서 수령하셨습니다.'].join('');
+                    notification.postNotification(userId, title, description, function (err) {
+                        return next(null);
+                    });
+                })
+            });
+    });
+}
+
+exports.return = function (userId, rentalStateId, next) {
+    db.connection(function (err, connection) {
+        if (err) {
+            err['code'] = 500;
+            return next(err);
+        }
+        connection.query('UPDATE `RENTAL_STATE` SET `state` = 2 WHERE `rental_state_id` = ?',
+            [rentalStateId],
+            function (err, updates, fields) {
+                if (err) {
+                    err['code'] = 500;
+                    return next(err);
+                }
+                connection.query('SELECT * FROM `RENTAL_STATE`, `ITEM`, `RENTAL_SHOP` WHERE `rental_state_id` = ? AND `ITEM`.`item_id` = `RENTAL_STATE`.`item_id` AND `RENTAL_SHOP`.`rental_shop_id` = `RENTAL_STATE`.`rental_shop_id`',
+                [rentalStateId],
+                function (err, results, fields) {
+                    if (err) {
+                        err['code'] = 500;
+                        return next(err);
+                    }
+                    var result = results[0];
+                    var title = ['[', result['item_name'], '] 반납하셨습니다.'].join('')
+                    var description = ['[', result['item_name'], '] 물품을 [',
+                    result['rental_shop_name'], '] 대여소 (', result['rental_shop_address'], 
+                        ') 에서 반납하셨습니다.'].join('');
+                    notification.postNotification(userId, title, description, function (err) {
+                        return next(null);
+                    });
+                })
+            });
+    });
+}

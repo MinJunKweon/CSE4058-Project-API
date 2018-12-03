@@ -17,4 +17,20 @@ router.get('/', auth, function (req, res, next) {
     });
 });
 
+router.post('/change-state', auth, function (req, res, next) {
+    var isAvailable = req.body['is_available'];
+    var reason = req.body['reason'];
+    var rentalShopId = req.body['rental_shop_id'];
+    shop.changeState(rentalShopId, isAvailable, reason, function (err){
+        if (err) {
+            console.log(err);
+            return res.status(err['code']).send(err);
+        }
+        return res.json({
+            'code' : 200,
+            'message' : 'succeed to change state'
+        });
+    });
+});
+
 module.exports = router;
