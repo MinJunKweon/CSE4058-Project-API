@@ -209,7 +209,7 @@ exports.return = function (userId, rentalStateId, next) {
             err['code'] = 500;
             return next(err);
         }
-        connection.query('UPDATE `RENTAL_STATE` SET `state` = 2 WHERE `rental_state_id` = ?',
+        connection.query('UPDATE `RENTAL_STATE` SET `state` = 2, `end_date` = CURRENT_TIMESTAMP WHERE `rental_state_id` = ?',
             [rentalStateId],
             function (err, updates, fields) {
                 if (err) {
@@ -233,5 +233,22 @@ exports.return = function (userId, rentalStateId, next) {
                     });
                 })
             });
+    });
+}
+
+exports.additionalPayment = function (userId, next) {
+    db.connection(function (err, connection) {
+        if (err) {
+            err['code'] = 500;
+            return next(err);
+        }
+        connection.query('UPDATE `RENTAL_STATE` SET `is_additional_payment` = 1 WHERE `user_id` = ? AND `state` = 2',
+        [userId], function (err, results, fields) {
+            if (err) {
+                err['code'] = 500;
+                return next(err);
+            }
+            return next(null);
+        });
     });
 }

@@ -78,4 +78,19 @@ router.get('/return/:rental_state_id', auth, function (req, res, next) {
     });
 });
 
+/* 추가 과금 */
+router.post('/additional_pay', auth, function (req, res, next) {
+    var userId = req.session.user['user_id'];
+    rental.additionalPayment(userId, function (err) {
+        if (err) {
+            console.log(err);
+            return res.status(err['code']).send(err);
+        }
+        return res.json({
+            'code' : 200,
+            'message' : 'succeed to pay additional'
+        });
+    });
+});
+
 module.exports = router;

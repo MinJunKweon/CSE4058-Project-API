@@ -130,4 +130,27 @@ router.get('/registered/:phone_number', function (req, res, next) {
   });
 });
 
+router.get('/require_payment', auth, function (req, res, next) {
+  var userId = req.session.user['user_id'];
+  user.requirePayment(userId, function (err, days) {
+    if (err) {
+      console.log(err);
+      return res.status(err['code']).send(err);
+    }
+    if (days) {
+      return res.status(200).json({
+        'code' : 200,
+        'message' : 'require payment',
+        'data' : days
+      });
+    } else {
+      return res.json({
+        'code' : 200,
+        'message' : 'no require payment',
+        'data' : 0
+      });
+    }
+  });
+});
+
 module.exports = router;

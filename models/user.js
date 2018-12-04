@@ -134,3 +134,26 @@ exports.isExists = function (query, next) {
         });
     });
 }
+
+exports.requirePayment = function (userId, next) {
+    db.connection(function (err, connection) {
+        if (err) {
+            err['code'] = 500;
+            return next(err, null);
+        }
+        connection.query('SELECT SUM(ROUND((UNIX_TIMESTAMP(`RENTAL_STATE`.`end_date`) - UNIX_TIMESTAMP(`RENTAL_STATE`.`start_date`))/86400)) payment\
+        FROM `RENTAL_STATE`, `COUPON`, `CUSTOMER_COUPON`\
+        WHERE `RENTAL_STATE`.`user_id` = ?\
+        AND `RENTAL_STATE`.`coupon_seq` = `CUSTOMER_COUPON`.`coupon_seq`\
+        AND `CUSTOMER_COUPON`.`coupon_id` = `COUPON`.`coupon_id`\
+        AND (UNIX_TIMESTAMP(`RENTAL_STATE`.`end_date`) - UNIX_TIMESTAMP(`RENTAL_STATE`.`start_date`))\
+        > 86400 * `duration` AND `state` = 2 AND `is_additional_payment` = 0',
+        [userId], function (err, results, fields) {
+            if (err) {
+                err['code'] = 500;
+                return next(err, null);
+            }
+            return next(err, results[0]['payment']);
+        });
+    })
+}
