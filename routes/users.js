@@ -68,7 +68,7 @@ router.get('/sms/:phone_number', function (req, res, next) {
   var data = {
     "sender"     : smsConfig.SENDER,
     "receivers"  : [req.params['phone_number']],
-    "content"    : util.format('[갑자기] 회원가입 인증번호 [%d] 를 입력해주세요.', verifyCode)
+    "content"    : util.format('[갑자기] 인증번호 [%d] 를 입력해주세요.', verifyCode)
   }
   var body = JSON.stringify(data);
 
@@ -114,9 +114,20 @@ router.get('/sms/:phone_number/:verify_code', function (req, res, next) {
   }
 });
 
-/* FOR DEBUG : session checking */
-router.get('/', auth, function (req, res, next) {
-  return res.send(req.session);
+router.get('/registered/:phone_number', function (req, res, next) {
+  var phoneNumber = req.params['phone_number'];
+  user.isExists({ 'phone_number' : phoneNumber }, function (err, user) {
+    if (err) {
+      console.log(err);
+      return res.status(err['code']).send(err);
+    }
+    req.session.user = user;
+    return res.json({
+      'code' : 200,
+      'message' : 'exists user',
+      'data' : user
+    });
+  });
 });
 
 module.exports = router;

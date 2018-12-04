@@ -112,3 +112,25 @@ exports.updatePassword = function (userId, password, next) {
         });
     });
 };
+
+exports.isExists = function (query, next) {
+    db.connection(function (err, connection) {
+        if (err) {
+            err['code'] = 500;
+            return next(err, null);
+        }
+        connection.query('SELECT * FROM `USER` WHERE ?', query, function (err, results, fields) {
+            if (err) {
+                err['code'] = 500;
+                return next(err, null);
+            }
+            if (results.length == 0) {
+                return next({
+                    'code' : 600,
+                    'message' : 'no user'
+                });
+            }
+            return next(null, results[0]);
+        });
+    });
+}
