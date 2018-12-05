@@ -14,6 +14,7 @@ var couponsRouter = require('./routes/coupons');
 var rentalsRouter = require('./routes/rentals');
 var notificationsRouter = require('./routes/notifications');
 var qnasRouter = require('./routes/qnas');
+var reviewRouter = require('./routes/reviews');
 
 var app = express();
 
@@ -39,6 +40,7 @@ app.use('/coupons', couponsRouter);
 app.use('/rentals', rentalsRouter);
 app.use('/notifications', notificationsRouter);
 app.use('/qna', qnasRouter);
+app.use('/review', reviewRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

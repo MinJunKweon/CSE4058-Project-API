@@ -24,6 +24,7 @@ var rentalStatify = function (result) {
         'received_code' : result['received_code'],
         'return_code' : result['return_code'],
         'is_expired' : result['is_expired'],
+        'is_reviewed' : result['is_reviewed'],
         'created_at' : result['created_at']
     };
 }
@@ -111,7 +112,21 @@ exports.postRental = function (userId, rentalShop, item, couponSeq, next) {
             err['code'] = 500;
             return next(err);
         }
-        connection.query('UPDATE `CUSTOMER_COUPON` SET `is_using` = 1 WHERE `coupon_seq` = ? AND `is_using` = 0',
+        var itemAttr = ['item',result['item_id'],'_amt'].join('');
+        connection.query('SELECT ? WHERE `rental_shop_id` = ?',
+        [itemAttr, rentalShopId],
+        function (err, results) {
+            if (err) {
+                err['code'] = 500;
+                return next(err);
+            }
+            if (results.length || parseInt(results[0][itemAttr]) < 1) {
+                return next({
+                    'code' : 606,
+                    'message' : 'no items'
+                });
+            }
+            connection.query('UPDATE `CUSTOMER_COUPON` SET `is_using` = 1 WHERE `coupon_seq` = ? AND `is_using` = 0',
             [couponSeq],
             function (err, results, fields) {
                 if (err) {
@@ -136,6 +151,7 @@ exports.postRental = function (userId, rentalShop, item, couponSeq, next) {
                     });
                 });
             });
+        });
     });
 }
 
@@ -191,6 +207,10 @@ exports.receive = function (userId, rentalStateId, next) {
                         return next(err);
                     }
                     var result = results[0];
+                    var itemAttr = ['item',result['item_id'],'_amt'].join('');
+                    connection.query('UPDATE `RENTAL_SHOP` SET ? WHERE `rental_shop_id` = ?',
+                    [{ [itemAttr] : result[itemAttr] - 1}, result['rental_shop_id']]);
+
                     var title = ['[', result['item_name'], '] 수령하셨습니다.'].join('')
                     var description = ['[', result['item_name'], '] 물품을 [',
                         result['rental_shop_name'], '] 대여소 (', result['rental_shop_address'], 
@@ -224,6 +244,10 @@ exports.return = function (userId, rentalStateId, next) {
                         return next(err);
                     }
                     var result = results[0];
+                    var itemAttr = ['item',result['item_id'],'_amt'].join('');
+                    connection.query('UPDATE `RENTAL_SHOP` SET ? WHERE `rental_shop_id` = ?',
+                    [{ [itemAttr] : result[itemAttr] + 1}, result['rental_shop_id']]);
+
                     var title = ['[', result['item_name'], '] 반납하셨습니다.'].join('')
                     var description = ['[', result['item_name'], '] 물품을 [',
                     result['rental_shop_name'], '] 대여소 (', result['rental_shop_address'], 
