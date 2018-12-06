@@ -112,15 +112,15 @@ exports.postRental = function (userId, rentalShop, item, couponSeq, next) {
             err['code'] = 500;
             return next(err);
         }
-        var itemAttr = ['item',result['item_id'],'_amt'].join('');
-        connection.query('SELECT ? WHERE `rental_shop_id` = ?',
-        [itemAttr, rentalShopId],
-        function (err, results) {
+        var itemAttr = ['item', itemId, '_amt'].join('');
+        connection.query('SELECT * FROM `RENTAL_SHOP` WHERE `rental_shop_id` = ?',
+        [rentalShopId],
+        function (err, results, fields) {
             if (err) {
                 err['code'] = 500;
                 return next(err);
             }
-            if (results.length || parseInt(results[0][itemAttr]) < 1) {
+            if (!results.length || parseInt(results[0][itemAttr]) < 1) {
                 return next({
                     'code' : 606,
                     'message' : 'no items'

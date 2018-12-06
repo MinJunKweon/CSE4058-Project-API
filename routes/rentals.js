@@ -11,6 +11,7 @@ router.post('/create', auth, function (req, res, next) {
     var item = req.body['item'];
     rental.postRental(userId, rentalShop, item, couponSeq, function (err) {
         if (err) {
+            console.log(err);
             return res.status(err['code']).send(err);
         }
         return res.json({

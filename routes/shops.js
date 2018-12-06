@@ -20,8 +20,11 @@ router.get('/', auth, function (req, res, next) {
 router.post('/change-state', auth, function (req, res, next) {
     var isAvailable = req.body['is_available'];
     var reason = req.body['reason'];
+    var item1Amt = req.body['item1_amt'];
+    var item2Amt = req.body['item2_amt'];
+    var item3Amt = req.body['item3_amt'];
     var rentalShopId = req.body['rental_shop_id'];
-    shop.changeState(rentalShopId, isAvailable, reason, function (err){
+    shop.changeState(rentalShopId, isAvailable, item1Amt, item2Amt, item3Amt, reason, function (err){
         if (err) {
             console.log(err);
             return res.status(err['code']).send(err);
