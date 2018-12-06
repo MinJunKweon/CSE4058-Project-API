@@ -49,10 +49,9 @@ router.get('/history', auth, function (req, res, next) {
 });
 
 /* 물품 수령 */
-router.get('/receive/:rental_state_id', auth, function (req, res, next) {
-    var userId = req.session.user['user_id'];
-    var rentalStateId = req.params['rental_state_id'];
-    rental.receive(userId, rentalStateId, function (err) {
+router.get('/receive/:receive_code', function (req, res, next) {
+    var receiveCode = req.params['receive_code'];
+    rental.receive(receiveCode, function (err) {
         if (err) {
             return res.status(err['code']).send(err);
         }
@@ -64,10 +63,9 @@ router.get('/receive/:rental_state_id', auth, function (req, res, next) {
 });
 
 /* 물품 반납 */
-router.get('/return/:rental_state_id', auth, function (req, res, next) {
-    var userId = req.session.user['user_id'];
-    var rentalStateId = req.params['rental_state_id'];
-    rental.return(userId, rentalStateId, function (err) {
+router.get('/return/:return_code', function (req, res, next) {
+    var returnCode = req.params['return_code'];
+    rental.return(returnCode, function (err) {
         if (err) {
             return res.status(err['code']).send(err);
         }

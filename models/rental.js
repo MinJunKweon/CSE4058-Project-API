@@ -186,36 +186,44 @@ exports.currentRentals = function(userId, next) {
     });
 };
 
-exports.receive = function (userId, rentalStateId, next) {
+exports.receive = function (receivedCode, next) {
     db.connection(function (err, connection) {
         if (err) {
             err['code'] = 500;
             return next(err);
         }
-        connection.query('UPDATE `RENTAL_STATE` SET `state` = 1 WHERE `rental_state_id` = ?',
-            [rentalStateId],
+        connection.query('UPDATE `RENTAL_STATE` SET `state` = 1 WHERE `received_code` = ?',
+            [receivedCode],
             function (err, updates, fields) {
                 if (err) {
                     err['code'] = 500;
                     return next(err);
                 }
-                connection.query('SELECT * FROM `RENTAL_STATE`, `ITEM`, `RENTAL_SHOP` WHERE `rental_state_id` = ? AND `ITEM`.`item_id` = `RENTAL_STATE`.`item_id` AND `RENTAL_SHOP`.`rental_shop_id` = `RENTAL_STATE`.`rental_shop_id`',
-                [rentalStateId],
+                connection.query('SELECT * FROM `RENTAL_STATE`, `ITEM`, `RENTAL_SHOP` WHERE `received_code` = ? AND `ITEM`.`item_id` = `RENTAL_STATE`.`item_id` AND `RENTAL_SHOP`.`rental_shop_id` = `RENTAL_STATE`.`rental_shop_id`',
+                [receivedCode],
                 function (err, results, fields) {
                     if (err) {
                         err['code'] = 500;
                         return next(err);
+                    }
+                    if (results.length == 0) {
+                        return next({
+                            'code' : 404,
+                            'message' : 'rental not found'
+                        });
                     }
                     var result = results[0];
                     var itemAttr = ['item',result['item_id'],'_amt'].join('');
                     connection.query('UPDATE `RENTAL_SHOP` SET ? WHERE `rental_shop_id` = ?',
                     [{ [itemAttr] : result[itemAttr] - 1}, result['rental_shop_id']]);
 
+                    connection.query('UPDATE `RENTAL_STATE` SET `received_code` = NULL WHERE `received_code` = ?', [receivedCode]);
+
                     var title = ['[', result['item_name'], '] 수령하셨습니다.'].join('')
                     var description = ['[', result['item_name'], '] 물품을 [',
                         result['rental_shop_name'], '] 대여소 (', result['rental_shop_address'], 
                         ') 에서 수령하셨습니다.'].join('');
-                    notification.postNotification(userId, title, description, function (err) {
+                    notification.postNotification(result['user_id'], title, description, function (err) {
                         return next(null);
                     });
                 })
@@ -223,36 +231,43 @@ exports.receive = function (userId, rentalStateId, next) {
     });
 }
 
-exports.return = function (userId, rentalStateId, next) {
+exports.return = function (returnCode, next) {
     db.connection(function (err, connection) {
         if (err) {
             err['code'] = 500;
             return next(err);
         }
-        connection.query('UPDATE `RENTAL_STATE` SET `state` = 2, `end_date` = CURRENT_TIMESTAMP WHERE `rental_state_id` = ?',
-            [rentalStateId],
+        connection.query('UPDATE `RENTAL_STATE` SET `state` = 2, `end_date` = CURRENT_TIMESTAMP WHERE `return_code` = ?',
+            [returnCode],
             function (err, updates, fields) {
                 if (err) {
                     err['code'] = 500;
                     return next(err);
                 }
-                connection.query('SELECT * FROM `RENTAL_STATE`, `ITEM`, `RENTAL_SHOP` WHERE `rental_state_id` = ? AND `ITEM`.`item_id` = `RENTAL_STATE`.`item_id` AND `RENTAL_SHOP`.`rental_shop_id` = `RENTAL_STATE`.`rental_shop_id`',
-                [rentalStateId],
+                connection.query('SELECT * FROM `RENTAL_STATE`, `ITEM`, `RENTAL_SHOP` WHERE `return_code` = ? AND `ITEM`.`item_id` = `RENTAL_STATE`.`item_id` AND `RENTAL_SHOP`.`rental_shop_id` = `RENTAL_STATE`.`rental_shop_id`',
+                [returnCode],
                 function (err, results, fields) {
                     if (err) {
                         err['code'] = 500;
                         return next(err);
                     }
+                    if (results.length == 0) {
+                        return next({
+                            'code' : 404,
+                            'message' : 'rental not found'
+                        });
+                    }
                     var result = results[0];
                     var itemAttr = ['item',result['item_id'],'_amt'].join('');
                     connection.query('UPDATE `RENTAL_SHOP` SET ? WHERE `rental_shop_id` = ?',
                     [{ [itemAttr] : result[itemAttr] + 1}, result['rental_shop_id']]);
+                    connection.query('UPDATE `RENTAL_STATE` SET `return_code` = NULL WHERE `return_code` = ?', [returnCode]);
 
                     var title = ['[', result['item_name'], '] 반납하셨습니다.'].join('')
                     var description = ['[', result['item_name'], '] 물품을 [',
                     result['rental_shop_name'], '] 대여소 (', result['rental_shop_address'], 
                         ') 에서 반납하셨습니다.'].join('');
-                    notification.postNotification(userId, title, description, function (err) {
+                    notification.postNotification(result['user_id'], title, description, function (err) {
                         return next(null);
                     });
                 })
